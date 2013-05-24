@@ -1,9 +1,11 @@
 DRupal Aggregation Bundles (DRAB)
 ====
 
-Drupal provides a system to automatically aggregate CSS and JS files.   This is handy if you have a small site with a few CSS or JS files to be combined.    IF you are working on a larger site with aggregation turned on, this means you are getting CSS/JS for sections of the site that a person may never see.
+Drupal provides a system to automatically aggregate CSS and JS files.   This is handy if you have a small site with a few CSS or JS files to be combined.    If you are working on a larger site with aggregation turned on, this means you are getting CSS/JS for sections of the site that a person may never see.
 
 What this module allows us to do is create a "bundle" off CSS/JS files in the theme .info file and have that bundle applied only to certian paths.   
+
+Another advantage of this approach is that it allows for fine grained control of the aggregated and cached files.  In the old system, one update to a file would mean a whole new big file to download.   In this approach, only the bundles that contain that file need to get updated.   This means the other bundles can remain in browser cache until the cache expires or a file in that bundle gets updated.
 
 Example Use Case
 ----------------
@@ -25,6 +27,11 @@ bundle[base][css][files][] = base/css/shared-panes.css.less
 bundle[base][css][files][] = base/css/jquery.ui.theme.css
 bundle[base][css][files][] = base/css/jquery.ui.tabs.css
 bundle[base][css][path][] = all
+
+bundle[booking_path][css][files][] = transaction/css/step-1.css.less
+bundle[booking_path][css][files][] = transaction/css/step-2.css.less
+bundle[booking_path][css][files][] = transaction/css/step-3.css.less
+bundle[booking_path][css][files][] = transaction/css/step-4.css.less
+bundle[base][css][path][] = book/flights/*
 ```
 
-The path can be "all" or something like "book/flight/*"
