@@ -1,32 +1,6 @@
 <?php
 
 
-function drab_menu(){
-  
-  
-  $items['admin/config/development/drab'] = array(
-    'title' => 'Aggregation bundles',
-    'page callback' => 'drupal_get_form', 
-    'page arguments' => array('drab_bundle_form'),
-    'access callback' => 'user_access',
-    'access arguments' => array('administer drab'),
-    'description' => 'Set bundles of CSS files in the theme',
-    'type' => MENU_NORMAL_ITEM,
-    'file' => 'drab.admin.inc',
-  );
-  
-  return $items;
-}
-
-function drab_permission(){
-  return array(
-    'administer drab' => array(
-      'title' => t('Administer Drupal Aggregation Bundles'),
-      'description' => t('Create CSS/JS file bundles'),
-    ),
-  );
-}
-
 
 /**
  * A function to generate the bundle data from the current themes.
@@ -53,11 +27,11 @@ function drab_get_files($current_path) {
       $theme_path = dirname($themes[$key]->filename) . '/';
       if (isset($themes[$key]->info['bundle'])) {
         
-        foreach ($themes[$key]->info['bundle'] as $bundle) {
           
+        foreach ($themes[$key]->info['bundle'] as $bundle_name => $bundle) {
+    
           $has_errors = FALSE;
-          
-          
+                   
           // Validate we have all the information we need
           $type = key($bundle);
           $allowed_types = array('css', 'js');
@@ -84,7 +58,7 @@ function drab_get_files($current_path) {
             $file_details = drab_generate_bundled_file($bundle);
             
             // add an extra attribute to make tracking files easier
-            $file_details['#attributes']['data-drab-generated'] = NULL;
+            $file_details['#attributes']['data-drab-name'] = $bundle_name;
             
             
             // check if we are on a path to add on
@@ -93,12 +67,11 @@ function drab_get_files($current_path) {
               $page_match = drupal_match_path($current_path, $bundle_path);
               $in_current_theme = ($theme_info->name == $themes[$key]->name) ? TRUE : FALSE;
               
-              if(($page_match || $bundle_path == "all")){
+              if($page_match || $bundle_path == "all"){
                 $generated_files[] = $file_details;
               }
             }
              
-            print_r($generated_files);
           }
         }
       }      
@@ -107,6 +80,7 @@ function drab_get_files($current_path) {
   
   // generate the link html tags
   $files = '';
+  print_r($generated_files);
   foreach($generated_files as $file){
     
 //    print_r($file);
@@ -118,22 +92,6 @@ function drab_get_files($current_path) {
   return $files;
 }
 
-
-
-
-/**
- * Helper function to sanitize Modernizr.load() assets
- */
-function _drab_sanitize_resource($resource, $theme_path) {
-  global $base_url;
-  $output = '';
-
-  // If a path starts with 'sites' we assume they know exactly where they're
-  // going. Otherwise, they seem like relative URLs so append theme path.
-  $output = (strpos($resource, 'sites/') !== FALSE) ? $resource : $base_url . '/' . $theme_path . $resource;
-
-  return $output;
-}
 
 /**
  * Generates a aggregated file based on the bundle
@@ -156,8 +114,7 @@ function drab_generate_bundled_file($bundle){
      
      // fix path
      $theme_path = drupal_get_path('theme', $bundle['theme']);
-     $file_path = $theme_path . '/' . $file;
-     
+     $file_path = $theme_path . '/' . $file; 
      
      // copy
      $file_group[$file_path] = $all_css_files[$file_path];
@@ -209,16 +166,17 @@ function drab_template_process_html_override(&$variables) {
   // Place the rendered HTML for the page body into a top level variable.
   $variables['page'] = $variables['page']['#children'];
 
-  
-  $path = current_path();
-    
-  $drab_files = drab_get_files($path);
-  if($drab_files){
-    $styles = $drab_files;
-  } else {
-    $styles = drupal_add_css();
+  // Only run if aggregation is on
+  $preprocess_css_enabled = variable_get('preprocess_css');
+  $styles = drupal_get_css();
+  if($preprocess_css_enabled){
+    $path = current_path();    
+    $drab_files = drab_get_files($path);
+    // make sure we can always fall back to default drupal_get_css()
+    if($drab_files){
+      $styles = $drab_files;
+    }
   }
-  
   
   $variables['head'] = drupal_get_html_head();
   $variables['css'] = drupal_add_css();
