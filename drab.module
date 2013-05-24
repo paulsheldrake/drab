@@ -63,14 +63,16 @@ function drab_get_files($current_path) {
             
             // check if we are on a path to add on
             foreach($bundle[$type]['path'] as $bundle_path) {
-            
-              $page_match = drupal_match_path($current_path, $bundle_path);
-              $in_current_theme = ($theme_info->name == $themes[$key]->name) ? TRUE : FALSE;
               
+              $alias_path = drupal_get_path_alias($current_path);
+              $page_match = drupal_match_path($alias_path, $bundle_path);
+              $in_current_theme = ($theme_info->name == $themes[$key]->name) ? TRUE : FALSE;
+    
               if($page_match || $bundle_path == "all"){
                 $generated_files[] = $file_details;
               }
             }
+            
              
           }
         }
@@ -80,12 +82,8 @@ function drab_get_files($current_path) {
   
   // generate the link html tags
   $files = '';
-  print_r($generated_files);
-  foreach($generated_files as $file){
-    
-//    print_r($file);
-//    print_r(drupal_render($file));
-    
+
+  foreach($generated_files as $file){    
     $files .= drupal_render($file);
   }
   
@@ -132,10 +130,18 @@ function drab_generate_bundled_file($bundle){
      '#group_callback' => 'drupal_group_css',
      '#aggregate_callback' => 'drupal_aggregate_css',
    );
-   drupal_aggregate_css();
+   
    // if the less module exists process the stylesheets
    if(module_exists('less')){
      $rendered_options = _less_pre_render($rendered_options);
+   }
+   
+   // check for CDN
+   if(module_exists('cdn')){
+     $cdn_status = variable_get('cdn_status');
+     if($cdn_status > 0){
+       $rendered_options['#aggregate_callback'] = '_cdn_aggregate_css';
+     }
    }
    
    $rendered = drupal_pre_render_styles($rendered_options);
