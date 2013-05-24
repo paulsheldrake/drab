@@ -5,6 +5,8 @@ Drupal provides a system to automatically aggregate CSS and JS files.   This is 
 
 What this module allows us to do is create a "bundle" off CSS/JS files in the theme .info file and have that bundle applied only to certian paths.   
 
+Another advantage of this approach is that it allows for fine grained control of the aggregated and cached files.  In the old system, one update to a file would mean a whole new big file to download.   In this approach, only the bundles that contain that file need to get updated.   This means the other bundles can remain in browser cache until the cache expires or a file in that bundle gets updated.
+
 Example Use Case
 ----------------
 
