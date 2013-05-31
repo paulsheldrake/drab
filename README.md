@@ -35,3 +35,9 @@ bundle[booking_path][css][files][] = transaction/css/step-4.css.less
 bundle[base][css][path][] = book/flights/*
 ```
 
+Caveats
+-------
+
+This is for large sites that have descrete areas and not for small sites.
+
+More to come...
