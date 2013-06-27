@@ -40,4 +40,5 @@ Caveats
 
 This is for large sites that have descrete areas and not for small sites.
 
-More to come...
+Because this is URL specific it makes it bit fragile.   If some site editor comes along and changes the URL structure so it doesn't match the patterns in the info file the site could break quite badly
+
