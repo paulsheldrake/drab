@@ -1,0 +1,3 @@
+name = Drupal aggregation bundles
+description = Adds a way to bundle CSS files for the theme for performance reasons
+core = 7.x
