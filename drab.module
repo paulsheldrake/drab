@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * @file
+ * Makes the DRAB module do it's stuff
+ */
 
 
 /**
@@ -35,45 +38,37 @@ function drab_get_files($current_path) {
           // Validate we have all the information we need
           $type = key($bundle);
           $allowed_types = array('css', 'js');
-          if(!in_array($type, $allowed_types)){
-            drupal_set_message(t("Bundle needs a correct type set, either 'css' or 'js'"), 'error');
+          if (!in_array($type, $allowed_types)) {
+            drupal_set_message(t("DRAB needs a correct type set, either 'css' or 'js'"), 'error');
             $has_errors = TRUE;
           }
-//          else if(!isset($bundle[$type]['file_name']) && empty($bundle[$type]['file_name'])){
-//            drupal_set_message(t("Bundle needs a filename set"), 'error');
-//            $has_errors = TRUE;
-//          }
-          else if(!isset($bundle[$type]['files']) && empty($bundle[$type]['files'])){
-            drupal_set_message(t("Bundle needs a set of files to bundle"), 'error');
+          elseif (!isset($bundle[$type]['files']) && empty($bundle[$type]['files'])) {
+            drupal_set_message(t("DRAB needs a set of files to bundle"), 'error');
             $has_errors = TRUE;
           }
-          
-          
-          // add the theme to the bundle to make life simpler
+                    
+          // add the theme to the bundle to make life simpler later
           $bundle['theme'] = $themes[$key]->name;
-          
-          
+                    
           // if we have no errors then generate the bundle
-          if(!$has_errors){
+          if (!$has_errors) {
             $file_details = drab_generate_bundled_file($bundle);
             
-            // add an extra attribute to make tracking files easier
+            // add an extra attribute to make tracking files easier from the
+            // front end
             $file_details['#attributes']['data-drab-name'] = $bundle_name;
-            
-            
+                        
             // check if we are on a path to add on
-            foreach($bundle[$type]['path'] as $bundle_path) {
+            foreach ($bundle[$type]['path'] as $bundle_path) {
               
               $alias_path = drupal_get_path_alias($current_path);
               $page_match = drupal_match_path($alias_path, $bundle_path);
               $in_current_theme = ($theme_info->name == $themes[$key]->name) ? TRUE : FALSE;
     
-              if($page_match || $bundle_path == "all"){
+              if ($page_match || $bundle_path == "all") {
                 $generated_files[] = $file_details;
               }
             }
-            
-             
           }
         }
       }      
@@ -82,9 +77,12 @@ function drab_get_files($current_path) {
   
   // generate the link html tags
   $files = '';
-
-  foreach($generated_files as $file){    
-    $files .= drupal_render($file);
+  
+  // check we we have any generate files.
+  if (!empty($generated_files)) {
+    foreach ($generated_files as $file) {    
+      $files .= drupal_render($file);
+    }
   }
   
   return $files;
@@ -99,7 +97,7 @@ function drab_get_files($current_path) {
  * @param array $bundle
  * @return array 
  */
-function drab_generate_bundled_file($bundle){
+function drab_generate_bundled_file($bundle) {
     
    // vars
    $all_css_files = drupal_add_css();   
@@ -108,7 +106,7 @@ function drab_generate_bundled_file($bundle){
    $file_group = array();
    
    // copy the file information from the theme in to our custom group
-   foreach($files as $file){
+   foreach ($files as $file) {
      
      // fix path
      $theme_path = drupal_get_path('theme', $bundle['theme']);
@@ -132,14 +130,14 @@ function drab_generate_bundled_file($bundle){
    );
    
    // if the less module exists process the stylesheets
-   if(module_exists('less')){
+   if (module_exists('less')) {
      $rendered_options = _less_pre_render($rendered_options);
    }
    
    // check for CDN
-   if(module_exists('cdn')){
+   if (module_exists('cdn')) {
      $cdn_status = variable_get('cdn_status');
-     if($cdn_status > 0){
+     if ($cdn_status > 0) {
        $rendered_options['#aggregate_callback'] = '_cdn_aggregate_css';
      }
    }
@@ -151,8 +149,8 @@ function drab_generate_bundled_file($bundle){
 }
 
 /**
-  * Implements hook_theme_registry_alter().
-  */
+ * Implements hook_theme_registry_alter().
+ */
 function drab_theme_registry_alter(&$registry) {
   if (($index = array_search('template_process_html', $registry['html']['process functions'], TRUE)) !== FALSE) {
     array_splice($registry['html']['process functions'], $index, 1, 'drab_template_process_html_override');
@@ -172,14 +170,14 @@ function drab_template_process_html_override(&$variables) {
   // Place the rendered HTML for the page body into a top level variable.
   $variables['page'] = $variables['page']['#children'];
 
-  // Only run if aggregation is on
-  $preprocess_css_enabled = variable_get('preprocess_css');
+  // Only run if drab is enabled
+  $preprocess_drab_enabled = variable_get('preprocess_drab', FALSE);
   $styles = drupal_get_css();
-  if($preprocess_css_enabled){
+  if ($preprocess_drab_enabled) {
     $path = current_path();    
     $drab_files = drab_get_files($path);
     // make sure we can always fall back to default drupal_get_css()
-    if($drab_files){
+    if ($drab_files) {
       $styles = $drab_files;
     }
   }
@@ -189,4 +187,14 @@ function drab_template_process_html_override(&$variables) {
   $variables['styles']  = $styles;
   $variables['scripts'] = drupal_get_js();
 
+}
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function drab_form_system_performance_settings_alter(&$form, &$form_state, $form_id) {
+  $form['bandwidth_optimization']['preprocess_drab'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable the DRAB settings in the theme'),
+    '#default_value' => variable_get('preprocess_drab', FALSE),
+  );
 }
