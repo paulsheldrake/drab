@@ -6,11 +6,13 @@
 
 
 /**
- * A function to generate the bundle data from the current themes.
- *
+ * Returnsa bundle aggregrated files bases on a path
  * 
- * returns a sting of html link tags
- * 
+ * @global string $base_url
+ * @global string $base_theme_info
+ * @global string $theme_info
+ * @param string $current_path
+ * @return string 
  */
 function drab_get_files($current_path) {
   $load = &drupal_static(__FUNCTION__);
@@ -92,7 +94,7 @@ function drab_get_files($current_path) {
 /**
  * Generates a aggregated file based on the bundle
  * 
- * Returns an array that can by used 
+ * Returns an array that can by used by drupal_render
  * 
  * @param array $bundle
  * @return array 
@@ -158,10 +160,11 @@ function drab_theme_registry_alter(&$registry) {
 }
 
 /**
-  * Overrides template_process_html() in order to provide support for awesome new stuffzors!
-  *
-  * Huge, amazing ups to the wizard Sebastian Siemssen (fubhy) for showing me how to do this.
-  */
+ * Overrides template_process_html()
+ *
+ * This pattern was re-used from the Modernizer module.  Thanks to rupl, 
+ *  Yorirou and fubhy for figuring all this out.
+ */
 function drab_template_process_html_override(&$variables) {
 
   // Render page_top and page_bottom into top level variables.
@@ -170,7 +173,7 @@ function drab_template_process_html_override(&$variables) {
   // Place the rendered HTML for the page body into a top level variable.
   $variables['page'] = $variables['page']['#children'];
 
-  // Only run if drab is enabled
+  // Only run if DRAB is enabled
   $preprocess_drab_enabled = variable_get('preprocess_drab', FALSE);
   $styles = drupal_get_css();
   if ($preprocess_drab_enabled) {
