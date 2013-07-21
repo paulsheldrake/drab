@@ -44,5 +44,5 @@ Because this is URL specific it makes it bit fragile.   If some site editor come
 Inspiration
 -----------
 
-This module is took some inspiration/copied from how the [Modernizr](https://drupal.org/project/modernizr) added more information in to the theme info file
+This module is took some inspiration/copied how the [Modernizr](https://drupal.org/project/modernizr) added more information in to the theme info file
 
